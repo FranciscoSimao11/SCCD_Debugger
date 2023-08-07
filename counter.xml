@@ -1,0 +1,38 @@
+<?xml version="1.0" ?>
+<diagram author="Francisco Simoes" name="Counter">
+    <inport name="input" />
+    <outport name="output" />
+    <class name="MainApp" default="true">
+        <method name="MainApp">
+            <body>
+                <![CDATA[
+                self.counter = 0
+                ]]>
+            </body>
+        </method>
+        <method name="increment_counter">
+            <body>
+                self.counter = self.counter + 1
+                print "counter: ", self.counter
+            </body>
+        </method>
+        <scxml initial="state_A">
+            <state id="state_A">
+                <onentry>
+                  <script>
+                      self.increment_counter();
+                  </script>
+                </onentry>
+                <transition target="../state_B" after="5" />
+            </state>
+            <state id="state_B">
+              <onentry>
+                <script>
+                    self.increment_counter();
+                </script>
+              </onentry>
+                <transition target="../state_A" event="move" port="input" />
+            </state>
+        </scxml>
+    </class>
+</diagram>
