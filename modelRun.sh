@@ -1,1 +1,1 @@
-python debugger.py
+python debugger.py counter.xml
