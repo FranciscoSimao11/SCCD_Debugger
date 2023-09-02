@@ -14,7 +14,10 @@ class ModelParser():
         #states = {}
         for each in file:
             line = each.strip()
-            if "<state id" in line:                
+            if "<scxml" in line:
+                parts = line.split(' ')
+                initialStateId = parts[1][9:-2]
+            elif "<state id" in line:                
                 parts = line.split(' ')
                 stateId = parts[1][4:-2]
                 state = State(stateId, [], '')
@@ -37,7 +40,7 @@ class ModelParser():
                 transition = Transition(target, event, after)
                 currState.addTransition(transition)
         self.fixTransitions(states)
-        return states
+        return (states, initialStateId)
 
     def fixTransitions(self, states):
         for state in states:

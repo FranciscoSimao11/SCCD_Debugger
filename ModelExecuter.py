@@ -9,9 +9,10 @@ class ModelExecuter():
     #          self.states = []
     
 
-    def executeModel(self, states):
+    def executeModel(self, states, initialStateId):
         print("Started Execution")
         initialState = states[0]
+        #initialState = states[initialStateId]
         finalState = states[1]
         currState = initialState
         while currState != finalState:
