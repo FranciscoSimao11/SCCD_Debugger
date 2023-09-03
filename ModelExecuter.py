@@ -2,28 +2,35 @@
 from State import *
 from Transition import *
 from Timer import *
+import sys
 
 class ModelExecuter():
 
-    # def __init__(self):
-    #          self.states = []
-    
-
     def executeModel(self, states, initialStateId):
         print("Started Execution")
-        initialState = states[0]
-        #initialState = states[initialStateId]
-        finalState = states[1]
+        initialState = states[initialStateId]
+        #finalState = states[1]
+        finalState = states["state_B"]
         currState = initialState
         while currState != finalState:
             print("Current State: " + currState.name)
-            for t in currState.transitions: #threads? if there are several transitions
-                print(t.getPrintableObject())
-                timer = Timer()
-                timer.start()
-                time.sleep(t.getTimerFloat())
-                timer.stop()
-                firstStop = t #this doesnt work with more than 1 state, ideas?
-            currState = firstStop.target
+            transitionToExecute = self.checkSmallestTimer(currState.transitions)
+            print(transitionToExecute.getPrintableObject())
+            timer = Timer()
+            timer.start()
+            time.sleep(transitionToExecute.getTimerFloat())
+            timer.stop()
+            currState = transitionToExecute.target
         print("Finished Execution in state: " + currState.name)
         return states
+
+
+    def checkSmallestTimer(self, transitions):
+        smallest = sys.float_info.max
+        for t in transitions:
+            if t.getTimerFloat() < smallest:
+                smallest = t.getTimerFloat()
+                transition = t
+        return transition
+        
+

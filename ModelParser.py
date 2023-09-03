@@ -10,8 +10,7 @@ class ModelParser():
 
     
     def parseModel(self, file):
-        states = []
-        #states = {}
+        states = {}
         for each in file:
             line = each.strip()
             if "<scxml" in line:
@@ -22,8 +21,7 @@ class ModelParser():
                 stateId = parts[1][4:-2]
                 state = State(stateId, [], '')
                 currState = state
-                states.append(state)
-                #states[stateId] = state
+                states[stateId] = state
             elif "<transition" in line:
                 parts = line.split(' ')
                 target = ''
@@ -42,15 +40,14 @@ class ModelParser():
         self.fixTransitions(states)
         return (states, initialStateId)
 
+
+    #associate transitions with the objects of their target states instead of simply the stateId 
+    #should I do this or should I get the state from the states dictionary everytime im doing a transition?
     def fixTransitions(self, states):
-        for state in states:
-            #print(state)
-            for t in state.transitions:
-                targetName = t.target
-                #t.target = states[targetName]
-                for s in states:
-                    if s.name == targetName:
-                        t.target = s
+        for state in states.values():
+            for transition in state.transitions:
+                targetName = transition.target
+                transition.target = states[targetName]
 
     
 
