@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from State import *
 from Transition import *
+import sys
 
 class ModelParser():
 
@@ -26,14 +27,14 @@ class ModelParser():
                 parts = line.split(' ')
                 target = ''
                 event = ''
-                after = ''
+                after = -1 
                 for each in parts:
                     if "target" in each:
                         target = each[11:-1] #8 starts at 11 to remove the string b4 the name
                     elif "event" in each:
                         event = each[7:-1]
                     elif "after" in each:
-                        after = each[7:-1]
+                        after = float(each[7:-1])
                 targetName = target
                 transition = Transition(target, event, after)
                 currState.addTransition(transition)
