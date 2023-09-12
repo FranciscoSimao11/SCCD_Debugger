@@ -13,25 +13,25 @@ class ModelExecuter():
         #finalState = states["state_B"]
         currState = initialState
         while True: #currState != finalState
-            print("Current State: " + currState.name)
+            #print("Current State: " + currState.name)
 
             transitionToExecute, possibleTransitionsWithEvents = self.checkSmallestTimer(currState.transitions)
             
-            if transitionToExecute != None and len(possibleTransitionsWithEvents) < 1:
+            if transitionToExecute != None and len(possibleTransitionsWithEvents) < 1: #TIMED TRANSITIONS ONLY
                 print("Timed Transition to be executed: " + transitionToExecute.getPrintableObject())
                 self.handleSleepTime(transitionToExecute.after)
-                currState = transitionToExecute.target
+                currState = states[transitionToExecute.target[3:]]
                 
-            elif transitionToExecute == None and len(possibleTransitionsWithEvents) > 0:
+            elif transitionToExecute == None and len(possibleTransitionsWithEvents) > 0: #EVENTS ONLY
                 print("Possible events: ")
                 for e in possibleTransitionsWithEvents.values():
                     print(e.event + "; ")
                 user_input_queue = Queue.Queue()
                 receivedEvent = self.requestEventInput(user_input_queue, possibleTransitionsWithEvents)
                 print("Received event " + receivedEvent)
-                currState = possibleTransitionsWithEvents[receivedEvent].target
+                currState = states[possibleTransitionsWithEvents[receivedEvent].target[3:]]
                 
-            elif transitionToExecute != None and len(possibleTransitionsWithEvents) > 0:
+            elif transitionToExecute != None and len(possibleTransitionsWithEvents) > 0: #TIMED TRANSITIONS AND EVENTS
                 #
                 print("Timed Transition to be executed: " + transitionToExecute.getPrintableObject())
                 print("Possible events: ")
@@ -60,8 +60,8 @@ class ModelExecuter():
                     user_input = user_input_queue.get()
 
                 currState = transitionToExecute.target #CHANGE
-            else:
-                print("Whoops, we've reached a dead end.")
+            #else:
+                #print("Whoops, we've reached a dead end.")
         print("Finished Execution in state: " + currState.name)
         return states
 
@@ -79,11 +79,7 @@ class ModelExecuter():
         timer.stop() #isto so pode executar se a cena acabar
 
     def eventInputThread(self, eventQueue, possibleTransitionsWithEvents, completion_event, termination_event):
-        while eventQueue.empty():
-            eventReceived = raw_input("> ")
-            if eventReceived in possibleTransitionsWithEvents:
-                eventQueue.put(eventReceived)
-            
+        self.requestEventInput(user_input_queue, possibleTransitionsWithEvents)
         completion_event.set() # Signal that this thread is done
         if not completion_event.is_set():
             terminate_event.set()

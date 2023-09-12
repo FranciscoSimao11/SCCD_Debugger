@@ -7,4 +7,4 @@ class Transition():
              self.after = after 
 
     def getPrintableObject(self):
-        return "Transition with Target: {}; Event: {}; After: {};".format(self.target.name, self.event, self.after)
+        return "Transition with Target: {}; Event: {}; After: {};\n".format(self.target, self.event, self.after)
