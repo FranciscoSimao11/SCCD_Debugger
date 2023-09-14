@@ -9,10 +9,10 @@ class Statechart():
         self.states[newState.name] = newState
 
     def getPrintableStates(self):
-        trans = ''
+        states = ''
         for each in self.states.values():
-            trans += each.getPrintableObject()
-        return trans
+            states += each.getPrintableObject()
+        return states
 
     def getPrintableObject(self):
-        return "Statechart with initial state {}\n\nStates:\n{}".format(self.initialState, self.getPrintableStates())
+        return "Statechart with initial state {}\n\nStates:\n\n{}".format(self.initialState, self.getPrintableStates())

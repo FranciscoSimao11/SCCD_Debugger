@@ -1,96 +1,131 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from State import *
 from Transition import *
 from Timer import *
 import sys, threading, multiprocessing
 import Queue
 
-class ModelExecuter():
+sync_event = threading.Event()
 
-    def executeModel(self, states, initialStateId):
+class ModelExecuter():    
+
+    def executeModel(self, states, initialStateId, scaleFactor):
         print("Started Execution")
         initialState = states[initialStateId]
         #finalState = states["state_B"]
         currState = initialState
+        #nextState = None
         while True: #currState != finalState
-            #print("Current State: " + currState.name)
-
-            transitionToExecute, possibleTransitionsWithEvents = self.checkSmallestTimer(currState.transitions)
+            print("Current State: " + currState.name)
             
-            if transitionToExecute != None and len(possibleTransitionsWithEvents) < 1: #TIMED TRANSITIONS ONLY
-                print("Timed Transition to be executed: " + transitionToExecute.getPrintableObject())
-                self.handleSleepTime(transitionToExecute.after)
-                currState = states[transitionToExecute.target[3:]]
+            entryScript = currState.entryScript
+            if entryScript != None:
+                print ("Exec entry script")
+
+            timedTransitionToExecute, possibleTransitionsWithEvents = self.checkSmallestTimer(currState.transitions)
+            
+            if timedTransitionToExecute != None and len(possibleTransitionsWithEvents) < 1: #TIMED TRANSITIONS ONLY
+                print("Timed Transition to be executed: " + timedTransitionToExecute.getPrintableObject())
                 
-            elif transitionToExecute == None and len(possibleTransitionsWithEvents) > 0: #EVENTS ONLY
-                print("Possible events: ")
-                for e in possibleTransitionsWithEvents.values():
-                    print(e.event + "; ")
-                user_input_queue = Queue.Queue()
-                receivedEvent = self.requestEventInput(user_input_queue, possibleTransitionsWithEvents)
-                print("Received event " + receivedEvent)
-                currState = states[possibleTransitionsWithEvents[receivedEvent].target[3:]]
+                mode = 0
+                transitionToExecute = timedTransitionToExecute
+                self.handleSleepTime(transitionToExecute.after, scaleFactor, mode)
+                nextState = states[transitionToExecute.target[3:]]
                 
-            elif transitionToExecute != None and len(possibleTransitionsWithEvents) > 0: #TIMED TRANSITIONS AND EVENTS
-                #
-                print("Timed Transition to be executed: " + transitionToExecute.getPrintableObject())
-                print("Possible events: ")
+            elif timedTransitionToExecute == None and len(possibleTransitionsWithEvents) > 0: #EVENTS ONLY
+                print("\rPossible events: ", end="")
                 for e in possibleTransitionsWithEvents.values():
                     print(e.event + "; ")
                     
-                user_input_queue = Queue.Queue()
+                mode = 0
+                eventQueue = Queue.Queue()
+                self.requestEventInput(eventQueue, possibleTransitionsWithEvents, mode)
+                transitionToExecute = self.processEventReception(eventQueue, possibleTransitionsWithEvents)
+                nextState = states[transitionToExecute.target[3:]]
                 
-                # Create events to track completion and termination of threads
-                completion_event = threading.Event()
-                terminate_event = multiprocessing.Event()
-
-                input_thread = threading.Thread(target=self.eventInputThread, args=(user_input_queue, possibleTransitionsWithEvents, completion_event, terminate_event))
-                sleep_thread = threading.Thread(target=self.sleepThread, args=(transitionToExecute.after, completion_event, terminate_event))
+            elif timedTransitionToExecute != None and len(possibleTransitionsWithEvents) > 0: #TIMED TRANSITIONS AND EVENTS
+                print("\rPossible events: ", end="")
+                for e in possibleTransitionsWithEvents.values():
+                    print(e.event + "; ")
                 
-                input_thread.start()
-                sleep_thread.start()
+                print("Timed Transition to be executed: " + timedTransitionToExecute.getPrintableObject())
+                
+                sleepTime = timedTransitionToExecute.after
+                eventQueue = Queue.Queue()
+                mode = 1
+                transitionToExecute = self.threadsSetup(sleepTime, eventQueue, mode, scaleFactor)    
+                nextState = states[transitionToExecute.target[3:]]
 
-                completion_event.wait()
-
-                # Check if the other thread needs to be forcibly terminated
-                if not terminate_event.is_set():
-                    terminate_event.set()  # Terminate the other thread
-
-                if not user_input_queue.empty():
-                    user_input = user_input_queue.get()
-
-                currState = transitionToExecute.target #CHANGE
-            #else:
-                #print("Whoops, we've reached a dead end.")
+            else:
+                print("Whoops, we've reached a dead end.")
+            
+            exitScript = currState.exitScript
+            
+            if exitScript != None:
+                print ("Exec exit script")
+                
+            transitionScript = transitionToExecute.script
+            if transitionScript != None:
+                print ("Exec transition script")
+            
+            currState = nextState    
+        
         print("Finished Execution in state: " + currState.name)
         return states
+        
 
+    def threadsSetup(self, sleepTime, eventQueue, scaleFactor, mode):
+        thread1 = threading.Thread(target = self.handleSleepTime, args=(sleepTime, scaleFactor, mode, ))
+        thread2 = threading.Thread(target = self.requestEventInput, args=(eventQueue, possibleTransitionsWithEvents, mode, ))
+        
+        thread1.start()
+        thread2.start()
+                
+        time.sleep(1)  # Sleep for 1 second to ensure both threads have started
+        sync_event.set()  # Set the synchronization event to release both threads
+        
+        # Wait for both threads to finish
+        thread1.join()
+        #thread2.join()
+        print("Both finished")
+        
+        if not eventQueue.empty():
+            transitionToExecute = self.processEventReception(eventQueue, possibleTransitionsWithEvents)
+        else:
+            print("No event received")
+            transitionToExecute = timedTransitionToExecute
+        return transitionToExecute
 
-    def sleepThread(self, sleepTime, completion_event, termination_event):
-        self.handleSleepTime(sleepTime)
-        completion_event.set() # Signal that this thread is done
-        if not completion_event.is_set():
-            terminate_event.set()
+    def processEventReception(self, eventQueue, possibleTransitionsWithEvents):
+        eventReceived = eventQueue.get()
+        print("Received event " + eventReceived)
+        transitionToExecute = possibleTransitionsWithEvents[eventReceived]
+        print("Event Based Transition to be executed: " + transitionToExecute.getPrintableObject())
+        return transitionToExecute
 
-    def handleSleepTime(self, sleepTime):
+    # mode 0 - just sleep; mode 1 - concurrent sleep and input
+    def handleSleepTime(self, sleepTime, scaleFactor, mode):
+        if mode == 1:
+            sync_event.wait()
+        if scaleFactor == 0:
+            sleepTime = 0
+        else:
+            sleepTime = sleepTime/scaleFactor
+        print("Sleeping for {} seconds.".format(sleepTime))
         timer = Timer()
         timer.start()
         time.sleep(sleepTime)
         timer.stop() #isto so pode executar se a cena acabar
 
-    def eventInputThread(self, eventQueue, possibleTransitionsWithEvents, completion_event, termination_event):
-        self.requestEventInput(user_input_queue, possibleTransitionsWithEvents)
-        completion_event.set() # Signal that this thread is done
-        if not completion_event.is_set():
-            terminate_event.set()
-        print ("\n")
-
-    def requestEventInput(self, eventQueue, possibleTransitionsWithEvents):
-        while eventQueue.empty():
-            eventReceived = raw_input("> ")
-            if eventReceived in possibleTransitionsWithEvents:
+    # mode 0 - just input; mode 1 - concurrent sleep and input
+    def requestEventInput(self, eventQueue, possibleTransitionsWithEvents, mode):
+        if mode == 1:
+            sync_event.wait()
+        #while eventQueue.empty():  
+        eventReceived = raw_input("> ")
+        if eventReceived in possibleTransitionsWithEvents:
                 eventQueue.put(eventReceived)
-        return eventQueue.get()
 
     def checkSmallestTimer(self, transitions):
         smallest = sys.float_info.max #this can never be the sleep time as it causes an overflow error

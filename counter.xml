@@ -23,7 +23,7 @@
                       self.increment_counter();
                   </script>
                 </onentry>
-                <transition target="../state_B" after="5" />
+                <transition target="../state_B" after="10" />
             </state>
             <state id="state_B">
               <onentry>
