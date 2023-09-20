@@ -23,11 +23,13 @@ class ModelExecuter():
                 newCurrStateId = currState.initialState
                 currState = currState.childStates[newCurrStateId]
                 currLevel = currLevel + 1
-                
+            
+            print("Current State: {} Current Level: {}".format(currState.name, currLevel))
             if currState.isHistoryState():
-                print("dog")
+                nextState = currState.lastActiveState
+                print("Moving back to state {}".format(nextState.name))
+                currState = nextState
             else:
-                print("Current State: {} Current Level: {}".format(currState.name, currLevel))
                 entryScript = currState.entryScript
                 if entryScript != None:
                     print ("Exec entry script")
@@ -65,9 +67,17 @@ class ModelExecuter():
                 else:
                     print("Whoops, we've reached a dead end.")
                 
-                nextState, currLevel = self.parseTarget(currLevel, transitionToExecute.target, statesPerLevel)
-                exitScript = currState.exitScript
+                prevLevel = currLevel
                 
+                nextState, currLevel = self.parseTarget(currLevel, transitionToExecute.target, statesPerLevel)
+                
+                if prevLevel != currLevel:
+                    for s in statesPerLevel[prevLevel]:
+                        if s.isHistoryState():
+                            s.lastActiveState = currState
+                            break
+                
+                exitScript = currState.exitScript
                 if exitScript != None:
                     print ("Exec exit script")
                     

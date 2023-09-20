@@ -4,10 +4,11 @@ class HistoryState():
     def __init__(self, name, kind, parentState):
             self.name = name
             self.kind = kind
-            self.lastState = None
             self.parentState = parentState
+            self.lastActiveState = None
             self.transitions = []
             
+    #DESNECESSARIO!!!!!!!!!!!!!!!!!!!
     def setupTransitions(self):
         for s in parentState.childState:
             newTransition = Transition(s.name, None, 0, None)
