@@ -7,5 +7,5 @@ class Transition():
              self.after = after
              self.script = script 
 
-    def getPrintableObject(self):
-        return "Transition with Target: {}; Event: {}; After: {}; Script: {};\n".format(self.target, self.event, self.after, self.script)
+    def getPrintableObject(self):    
+        return "Transition with Target: {}; Event: {}; After: {}; Script: {};\n".format(self.target, self.event, 'None' if self.after == -1 else self.after , self.script)

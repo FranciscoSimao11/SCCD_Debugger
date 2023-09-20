@@ -15,4 +15,4 @@ class Statechart():
         return states
 
     def getPrintableObject(self):
-        return "Statechart with initial state {}\n\nStates:\n\n{}".format(self.initialState, self.getPrintableStates())
+        return "Statechart with initial state '{}'\n\nStates:\n\n{}".format(self.initialState, self.getPrintableStates())

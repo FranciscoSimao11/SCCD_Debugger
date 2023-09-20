@@ -1,20 +1,34 @@
 from Transition import *
 
 class State():
-    def __init__(self, name, transitions, entryScript, exitScript):
+    def __init__(self, name, transitions, entryScript, exitScript, initialState, childStates, parentState):
              self.name = name
              self.transitions = transitions
              self.entryScript = entryScript
              self.exitScript = exitScript
+             self.initialState = initialState #its only an id
+             self.childStates = childStates
+             self.parentState = parentState
 
     def addTransition(self, newTransition):
         self.transitions.append(newTransition)
+        
+    def addState(self, newState):
+        self.childStates[newState.name] = newState
+        
+    def isComposite(self):
+        return self.initialState != None
+    
+    def isHistoryState(self):
+        return False
 
-    def getPrintableTransitions(self):
-        trans = ''
-        for each in self.transitions:
-           trans += each.getPrintableObject()
+    def getPrintableCollection(self, collection):
+        trans = '' 
+        for each in collection:
+            trans += each.getPrintableObject()
         return trans
-
+    
     def getPrintableObject(self):
-        return "State: {}\nTransitions: {}\nEntry script: {}\nExit script: {}\n\n".format(self.name, self.getPrintableTransitions()[:-2], self.entryScript, self.exitScript)
+        composite = 'Yes' if self.isComposite() else 'No\n'
+        printableStates = '' if composite != 'Yes' else '\nChild States:\n\n' + self.getPrintableCollection(self.childStates.values())
+        return "State: {}\nTransitions: {}\nEntry script: {}\nExit script: {}\nComposite State: {} {}\n".format(self.name, self.getPrintableCollection(self.transitions)[:-2], self.entryScript, self.exitScript, composite, printableStates)

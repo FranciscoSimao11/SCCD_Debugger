@@ -9,9 +9,8 @@ def main():
     f = open(sys.argv[1], "r")
     print("Parsing model...\n")
     mp = ModelParser()
-    classes, statecharts = mp.parseModel(f)
+    classes, statecharts, statesPerLevel = mp.parseModel(f)
     simulationModes = ["Real-Time Simulation", "Scaled Real-Time Simulation", "As-fast-as-Possible Simulation"]
-    #states, classes, initialStateId = mp.parseModel(f)
     
     for c in classes.values():
         print (c.getPrintableObject())
@@ -35,11 +34,11 @@ def main():
             
         #debugMode = raw_input("Enable debug mode? (write yes or no)\n> ")
         nextAction = raw_input("Start_Simulation? (write yes or no)\n> ")
-        if nextAction == "yes":
+        if nextAction == "yes" or nextAction == "y" or nextAction == "":
             print("Loading Model Executer...")
             me = ModelExecuter()
-            print(scaleFactor)
-            me.executeModel(s.states, s.initialState, scaleFactor)
+            print("Scale Factor: {}".format(scaleFactor))
+            me.executeModel(s.states, s.initialState, scaleFactor, statesPerLevel)
         else:
             print("Exiting...")
 

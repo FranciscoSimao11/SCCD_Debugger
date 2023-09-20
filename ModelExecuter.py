@@ -10,70 +10,95 @@ sync_event = threading.Event()
 
 class ModelExecuter():    
 
-    def executeModel(self, states, initialStateId, scaleFactor):
+    def executeModel(self, states, initialStateId, scaleFactor, statesPerLevel):
         print("Started Execution")
         initialState = states[initialStateId]
-        #finalState = states["state_B"]
         currState = initialState
-        #nextState = None
+        availableStates = states
+        currLevel = 0
+        
         while True: #currState != finalState
-            print("Current State: " + currState.name)
-            
-            entryScript = currState.entryScript
-            if entryScript != None:
-                print ("Exec entry script")
-
-            timedTransitionToExecute, possibleTransitionsWithEvents = self.checkSmallestTimer(currState.transitions)
-            
-            if timedTransitionToExecute != None and len(possibleTransitionsWithEvents) < 1: #TIMED TRANSITIONS ONLY
-                print("Timed Transition to be executed: " + timedTransitionToExecute.getPrintableObject())
+            while currState.isComposite():
+                availableStates = currState.childStates
+                newCurrStateId = currState.initialState
+                currState = currState.childStates[newCurrStateId]
+                currLevel = currLevel + 1
                 
-                mode = 0
-                transitionToExecute = timedTransitionToExecute
-                self.handleSleepTime(transitionToExecute.after, scaleFactor, mode)
-                nextState = states[transitionToExecute.target[3:]]
-                
-            elif timedTransitionToExecute == None and len(possibleTransitionsWithEvents) > 0: #EVENTS ONLY
-                print("\rPossible events: ", end="")
-                for e in possibleTransitionsWithEvents.values():
-                    print(e.event + "; ")
-                    
-                mode = 0
-                eventQueue = Queue.Queue()
-                self.requestEventInput(eventQueue, possibleTransitionsWithEvents, mode)
-                transitionToExecute = self.processEventReception(eventQueue, possibleTransitionsWithEvents)
-                nextState = states[transitionToExecute.target[3:]]
-                
-            elif timedTransitionToExecute != None and len(possibleTransitionsWithEvents) > 0: #TIMED TRANSITIONS AND EVENTS
-                print("\rPossible events: ", end="")
-                for e in possibleTransitionsWithEvents.values():
-                    print(e.event + "; ")
-                
-                print("Timed Transition to be executed: " + timedTransitionToExecute.getPrintableObject())
-                
-                sleepTime = timedTransitionToExecute.after
-                eventQueue = Queue.Queue()
-                mode = 1
-                transitionToExecute = self.threadsSetup(sleepTime, eventQueue, mode, scaleFactor)    
-                nextState = states[transitionToExecute.target[3:]]
-
+            if currState.isHistoryState():
+                print("dog")
             else:
-                print("Whoops, we've reached a dead end.")
-            
-            exitScript = currState.exitScript
-            
-            if exitScript != None:
-                print ("Exec exit script")
+                print("Current State: {} Current Level: {}".format(currState.name, currLevel))
+                entryScript = currState.entryScript
+                if entryScript != None:
+                    print ("Exec entry script")
+
+                timedTransitionToExecute, possibleTransitionsWithEvents = self.checkSmallestTimer(currState.transitions)
                 
-            transitionScript = transitionToExecute.script
-            if transitionScript != None:
-                print ("Exec transition script")
-            
-            currState = nextState    
+                if timedTransitionToExecute != None and len(possibleTransitionsWithEvents) < 1: #TIMED TRANSITIONS ONLY
+                    print("Timed Transition to be executed: " + timedTransitionToExecute.getPrintableObject())
+                    
+                    mode = 0
+                    transitionToExecute = timedTransitionToExecute
+                    self.handleSleepTime(transitionToExecute.after, scaleFactor, mode)
+                    
+                elif timedTransitionToExecute == None and len(possibleTransitionsWithEvents) > 0: #EVENTS ONLY
+                    print("\rPossible events: ", end="")
+                    for e in possibleTransitionsWithEvents.values():
+                        print(e.event + "; ", end="")
+                        
+                    mode = 0
+                    eventQueue = Queue.Queue()
+                    self.requestEventInput(eventQueue, possibleTransitionsWithEvents, mode)
+                    transitionToExecute = self.processEventReception(eventQueue, possibleTransitionsWithEvents)
+                    
+                elif timedTransitionToExecute != None and len(possibleTransitionsWithEvents) > 0: #TIMED TRANSITIONS AND EVENTS
+                    print("\rPossible events: ", end="")
+                    for e in possibleTransitionsWithEvents.values():
+                        print(e.event + "; ", end="")
+                    print("Timed Transition to be executed: " + timedTransitionToExecute.getPrintableObject())
+                    
+                    sleepTime = timedTransitionToExecute.after
+                    eventQueue = Queue.Queue()
+                    mode = 1
+                    transitionToExecute = self.threadsSetup(sleepTime, eventQueue, mode, scaleFactor)    
+
+                else:
+                    print("Whoops, we've reached a dead end.")
+                
+                nextState, currLevel = self.parseTarget(currLevel, transitionToExecute.target, statesPerLevel)
+                exitScript = currState.exitScript
+                
+                if exitScript != None:
+                    print ("Exec exit script")
+                    
+                transitionScript = transitionToExecute.script
+                if transitionScript != None:
+                    print ("Exec transition script")
+                
+                currState = nextState    
         
         print("Finished Execution in state: " + currState.name)
         return states
         
+    def parseTarget(self, currLevel, targetState, statesPerLevel):
+        levels = len(statesPerLevel)
+        target = targetState
+        levelDiff = -1
+        while "../" in target:
+            target = target[3:]
+            levelDiff = levelDiff + 1
+        targetLevel = currLevel - levelDiff
+        parts = target.split('/')
+        offset = len(parts) - 1
+        targetLevel = targetLevel + offset
+        target = parts[offset]
+        for s in statesPerLevel[targetLevel]:
+            if s.name == target:
+                targetObject = s
+                break
+        if targetObject == None:
+            print("Target does not exist.\n")
+        return targetObject, targetLevel
 
     def threadsSetup(self, sleepTime, eventQueue, scaleFactor, mode):
         thread1 = threading.Thread(target = self.handleSleepTime, args=(sleepTime, scaleFactor, mode, ))
@@ -123,7 +148,7 @@ class ModelExecuter():
         if mode == 1:
             sync_event.wait()
         #while eventQueue.empty():  
-        eventReceived = raw_input("> ")
+        eventReceived = raw_input("\n> ")
         if eventReceived in possibleTransitionsWithEvents:
                 eventQueue.put(eventReceived)
 
