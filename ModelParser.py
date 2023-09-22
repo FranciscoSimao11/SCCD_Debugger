@@ -5,6 +5,7 @@ from Class import*
 from Method import*
 from Statechart import*
 from HistoryState import*
+from Misc import*
 import xml.etree.ElementTree as ET
 import sys
 
@@ -21,6 +22,21 @@ class ModelParser():
         classes = {}
         statecharts = {}
         statesPerLevel = {}
+        author = root.get('author')
+        modelName = root.get('name')
+        inport = None
+        if root.find('inport') != None:
+            inport = root.find('inport').get('name')
+        outport = None
+        if root.find('outport') != None:
+            outport = root.find('outport').get('name')
+        top = None
+        if root.find('top') != None:
+            top = root.find('top').text.strip()
+        description = None
+        if root.find('description') != None:
+            description = root.find('description').text.strip()
+        miscInfo = Misc(author, modelName, top, inport, outport, description)
 
         #process classes
         for cl in root.findall('class'):
@@ -47,7 +63,7 @@ class ModelParser():
                 level = 0
                 self.processStates(statechart, newStatechart, level, statesPerLevel) 
                     
-        return classes, statecharts, statesPerLevel
+        return classes, statecharts, statesPerLevel, miscInfo
                 
     def hasChildren(self, state):
         return state.find('state') != None
@@ -55,11 +71,18 @@ class ModelParser():
     def processStates(self, statechart, newStatechart, level, statesPerLevel):
         if not level in statesPerLevel:
             statesPerLevel[level] = []
-        for state in statechart.findall('state'):
+        allStates = statechart.findall('state') + statechart.findall('parallel')
+        #is it logical to lump history states together with states and parallel states even though they can't be the top element?
+        for state in allStates:
+            if(state.tag == "state"):
+                parallel = False
+            else:
+                parallel = True
             stateId = state.get('id')
             transitions = []
             initialState = state.get('initial') #if its not a composite state, its None
             childStates = {}
+            
             if level == 0:
                 parentState = None
             else:
@@ -75,7 +98,7 @@ class ModelParser():
             if exitScript != None:
                 exitScript = exitScript.text.strip()
             
-            newState = State(stateId, transitions, entryScript, exitScript, initialState, childStates, parentState)                
+            newState = State(stateId, transitions, entryScript, exitScript, initialState, childStates, parentState, parallel)                
             newStatechart.addState(newState)
             
             #process outgoing transitions
@@ -88,7 +111,7 @@ class ModelParser():
                     after = -1
                 newTransition = Transition(target, event, float(after), script)
                 newState.addTransition(newTransition)
-       
+    
             for historyState in state.findall('history'):
                 name = historyState.get('id')
                 kind = historyState.get('type')
@@ -103,10 +126,9 @@ class ModelParser():
             if self.hasChildren(state): #or initialState != None. doesnt catch history states! (it doesnt make sense to though)
                 newLevel = level + 1
                 self.processStates(state, newState, newLevel, statesPerLevel)
-       
+    
             statesPerLevel[level].append(newState)
             print(statesPerLevel)
-        
             
                 
     # associate transitions with the objects of their target states instead of simply the stateId 

@@ -20,5 +20,8 @@ class HistoryState():
     def isComposite(self):
         return False
     
+    def isParallel(self):
+        return False
+
     def getPrintableObject(self):
         return "History State: {} with type {}\n\n".format(self.name, self.kind)

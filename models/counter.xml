@@ -1,7 +1,11 @@
 <?xml version="1.0" ?>
-<diagram author="Francisco Simoes" name="Composite Counter">
+<diagram author="Francisco Simoes" name="Counter">
     <inport name="input" />
     <outport name="output" />
+    <top>
+        from sccd.runtime.libs.ui import ui
+        from sccd.runtime.accurate_time import time
+    </top>
     <class name="MainApp" default="true">
         <method name="MainApp">
             <body>
@@ -17,23 +21,13 @@
             </body>
         </method>
         <scxml initial="state_A">
-            <state initial="state_A2" id="state_A">
-                <state id="state_A2">
-                    <onentry>
-                        <script>
-                            self.increment_counter();
-                        </script>
-                    </onentry>
-                    <transition target="../state_B2" after="5" />
-                </state>
-                <state id="state_B2">
-                    <onentry>
-                        <script>
-                            self.increment_counter();
-                        </script>
-                    </onentry>
-                    <transition target="../state_A2" event="move" port="input" />
-                </state>
+            <state id="state_A">
+                <onentry>
+                    <script>
+                      self.increment_counter();
+                    </script>
+                </onentry>
+                <transition target="../state_B" after="5" />
             </state>
             <state id="state_B">
                 <onentry>

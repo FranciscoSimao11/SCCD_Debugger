@@ -1,7 +1,7 @@
 from Transition import *
 
 class State():
-    def __init__(self, name, transitions, entryScript, exitScript, initialState, childStates, parentState):
+    def __init__(self, name, transitions, entryScript, exitScript, initialState, childStates, parentState, parallel):
              self.name = name
              self.transitions = transitions
              self.entryScript = entryScript
@@ -9,6 +9,7 @@ class State():
              self.initialState = initialState #its only an id
              self.childStates = childStates
              self.parentState = parentState
+             self.parallel = parallel
 
     def addTransition(self, newTransition):
         self.transitions.append(newTransition)
@@ -21,6 +22,9 @@ class State():
     
     def isHistoryState(self):
         return False
+    
+    def isParallel(self):
+        return parallel
 
     def getPrintableCollection(self, collection):
         trans = '' 

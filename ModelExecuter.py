@@ -19,10 +19,13 @@ class ModelExecuter():
         
         while True: #currState != finalState
             while currState.isComposite():
+                if currState.isParallel():
+                    self.parallelStates(currState)
                 availableStates = currState.childStates
                 newCurrStateId = currState.initialState
                 currState = currState.childStates[newCurrStateId]
                 currLevel = currLevel + 1
+            
             
             print("Current State: {} Current Level: {}".format(currState.name, currLevel))
             if currState.isHistoryState():
@@ -132,6 +135,9 @@ class ModelExecuter():
             transitionToExecute = timedTransitionToExecute
         return transitionToExecute
 
+    def parallelStates(self, currStates):
+        print("this is a parallel state")
+    
     def processEventReception(self, eventQueue, possibleTransitionsWithEvents):
         eventReceived = eventQueue.get()
         print("Received event " + eventReceived)

@@ -1,0 +1,68 @@
+<?xml version="1.0" ?>
+<diagram author="Francisco Simoes" name="Composite Counter">
+    <inport name="input" />
+    <outport name="output" />
+    <class name="MainApp" default="true">
+        <method name="MainApp">
+            <body>
+                <![CDATA[
+                self.counter = 0
+                ]]>
+            </body>
+        </method>
+        <method name="increment_counter">
+            <body>
+                self.counter = self.counter + 1
+                print "counter: ", self.counter
+            </body>
+        </method>
+        <scxml initial="parallel">
+            <state id="parallel" initial="state_A1">
+                <state id="state_A1" initial="state_AA2">
+                    <state id="state_AA2">
+                        <onentry>
+                            <script>
+                            self.increment_counter();
+                            </script>
+                        </onentry>
+                        <transition target="../state_AB2" after="5" />
+                    </state>
+                    <state id="state_AB2">
+                        <onentry>
+                            <script>
+                                self.increment_counter();
+                            </script>
+                        </onentry>
+                        <transition target="../state_AA2" event="move" port="input" />
+                    </state>
+                </state>
+                <state id="state_B1" initial="state_BA2">
+                    <state id="state_BA2">
+                        <onentry>
+                            <script>
+                            self.increment_counter();
+                            </script>
+                        </onentry>
+                        <transition target="../state_BB2" after="5" />
+                    </state>
+                    <state id="state_BB2">
+                        <onentry>
+                            <script>
+                                self.increment_counter();
+                            </script>
+                        </onentry>
+                        <transition target="../state_BA2" event="move" port="input" />
+                    </state>
+                </state>
+            </state>
+            <state id="state_B">
+                <onentry>
+                    <script>
+                        self.increment_counter();
+                    </script>
+                </onentry>
+                <transition target="../parallel" event="move" port="input" />
+            </state>
+        </scxml>
+    </class>
+</diagram>

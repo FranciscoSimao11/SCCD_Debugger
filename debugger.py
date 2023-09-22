@@ -9,11 +9,12 @@ def main():
     f = open(sys.argv[1], "r")
     print("Parsing model...\n")
     mp = ModelParser()
-    classes, statecharts, statesPerLevel = mp.parseModel(f)
+    classes, statecharts, statesPerLevel, miscInfo = mp.parseModel(f)
     simulationModes = ["Real-Time Simulation", "Scaled Real-Time Simulation", "As-fast-as-Possible Simulation"]
     
     for c in classes.values():
         print (c.getPrintableObject())
+        c.genFile()
     for statechart in statecharts.values():
         print (statechart.getPrintableObject())
     
