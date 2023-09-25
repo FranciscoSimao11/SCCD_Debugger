@@ -7,6 +7,10 @@
         from sccd.runtime.accurate_time import time
     </top>
     <class name="MainApp" default="true">
+        <relationships>
+            <association name="trafficlight" class="TrafficLight" />
+            <inheritance name="trafficlight" />
+        </relationships>
         <method name="MainApp">
             <body>
                 <![CDATA[

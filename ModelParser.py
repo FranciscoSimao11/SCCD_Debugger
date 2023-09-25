@@ -6,6 +6,8 @@ from Method import*
 from Statechart import*
 from HistoryState import*
 from Misc import*
+from Association import*
+from Inheritance import*
 import xml.etree.ElementTree as ET
 import sys
 
@@ -24,18 +26,10 @@ class ModelParser():
         statesPerLevel = {}
         author = root.get('author')
         modelName = root.get('name')
-        inport = None
-        if root.find('inport') != None:
-            inport = root.find('inport').get('name')
-        outport = None
-        if root.find('outport') != None:
-            outport = root.find('outport').get('name')
-        top = None
-        if root.find('top') != None:
-            top = root.find('top').text.strip()
-        description = None
-        if root.find('description') != None:
-            description = root.find('description').text.strip()
+        inport = root.find('inport').get('name') if root.find('inport') != None else None
+        outport = root.find('outport').get('name') if root.find('outport') != None else None
+        top = root.find('top').text.strip() if root.find('top') != None else None
+        description = root.find('description').text.strip() if root.find('description') != None else None
         miscInfo = Misc(author, modelName, top, inport, outport, description)
 
         #process classes
@@ -44,6 +38,27 @@ class ModelParser():
             methods = []
             relationships = []
             default = cl.get('default')
+            relationshipsXML = cl.find('relationships')
+            
+            for assoc in relationshipsXML.findall('association'):
+                name = assoc.get('name')
+                className = assoc.get('class')
+                min_ = assoc.get('min') if assoc.get('min') != None else 0
+                max_ = assoc.get('max') if assoc.get('max') != None else float('inf')
+                association = Association(name, className, min_, max_)
+                relationships.append(association)
+                
+            for i in relationshipsXML.findall('inheritance'):
+                name = i.get('name')
+                priority = i.get('priority') if i.get('priority') != None else 0
+                inheritance = Inheritance(name, priority)
+                relationships.append(inheritance)
+            
+            for attr in cl.findall('attribute'):
+                name = attr.get('name')
+                type_ = attr.get('type')
+                at = Attribute(name, type_)
+            
             newClass = Class(className, methods, relationships, default)
             classes[className] = newClass
             
