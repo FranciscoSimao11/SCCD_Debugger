@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-from statechartObjects.State import *
-from statechartObjects.Transition import *
+from statechartObjects.State import*
+from statechartObjects.Transition import*
 from statechartObjects.Statechart import*
 from statechartObjects.HistoryState import*
 from Misc import*
@@ -16,11 +16,6 @@ import sys
 
 class ModelParser():
 
-    # def __init__(self):
-    #          self.states = []
-    
-
-    
     def parseModel(self, file):
         tree = ET.parse(file)
         root = tree.getroot()
@@ -37,61 +32,15 @@ class ModelParser():
 
         #process classes
         for cl in root.findall('class'):
-            xmlClassName = cl.get('name')
-            methods = []
-            relationships = []
-            attributes = []
-            constructors = []
-            destructors = []
-            default = cl.get('default')
-            relationshipsXML = cl.find('relationships')
-            
-            for assoc in relationshipsXML.findall('association'):
-                name = assoc.get('name')
-                className = assoc.get('class')
-                min_ = assoc.get('min') if assoc.get('min') != None else 0
-                max_ = assoc.get('max') if assoc.get('max') != None else float('inf')
-                association = Association(name, className, min_, max_)
-                relationships.append(association)
-                
-            for i in relationshipsXML.findall('inheritance'):
-                name = i.get('name')
-                priority = i.get('priority') if i.get('priority') != None else 0
-                inheritance = Inheritance(name, priority)
-                relationships.append(inheritance)
-            
-            for attr in cl.findall('attribute'):
-                name = attr.get('name')
-                type_ = attr.get('type')
-                at = Attribute(name, type_)
-                attributes.append(at)
-            
-            for method in cl.findall('method'):
-                methodName = method.get('name')
-                body = method.find('body').text.strip()
-                newMethod = Method(methodName, body)
-                methods.append(newMethod)
-                
-            for constructs in cl.findall('constructor'):
-                parameters = []
-                body = i.get('body') if i.get('body') != None else ''
-                constructor = Constructor(parameters, body)
-                constructors.append(constructor)
-                
-            for destructs in cl.findall('destructor'):
-                body = i.get('body') if i.get('body') != None else ''
-                destructor = Destructor(body)
-                destructors.append(destructor)
-            
-            newClass = Class(xmlClassName, methods, relationships, attributes, constructors, destructors, default)
-            classes[xmlClassName] = newClass
+            newClass = self.processClass(cl)
+            classes[newClass.name] = newClass
             
             #process associated statechart
             for statechart in cl.findall('scxml'):
                 initialState = statechart.get('initial')
                 states = {}
                 newStatechart = Statechart(initialState, states)
-                statecharts[className] = newStatechart
+                statecharts[newClass.name] = newStatechart
                 level = 0
                 self.processStates(statechart, newStatechart, level, statesPerLevel) 
                     
@@ -161,17 +110,53 @@ class ModelParser():
     
             statesPerLevel[level].append(newState)
             print(statesPerLevel)
+                       
+    def processClass(self, cl):
+        xmlClassName = cl.get('name')
+        methods = []
+        relationships = []
+        attributes = []
+        constructors = []
+        destructors = []
+        default = cl.get('default')
+        relationshipsXML = cl.find('relationships')
+        
+        for assoc in relationshipsXML.findall('association'):
+            name = assoc.get('name')
+            className = assoc.get('class')
+            min_ = assoc.get('min') if assoc.get('min') != None else 0
+            max_ = assoc.get('max') if assoc.get('max') != None else float('inf')
+            association = Association(name, className, min_, max_)
+            relationships.append(association)
             
-                
-    # associate transitions with the objects of their target states instead of simply the stateId 
-    # should I do this or should I get the state from the states dictionary everytime im doing a transition?
-    # def fixTransitions(self, states):
-    #     for state in states.values():
-    #         for transition in state.transitions:
-    #             targetName = transition.target
-    #             transition.target = states[targetName]
-
-    
-
-    #para cada transicao. substituir o nome target pelo actual estado
-    #ou criar um mapa para dar match na altura da execucao? execuçao mais lenta ou startup mais lento?
+        for i in relationshipsXML.findall('inheritance'):
+            name = i.get('name')
+            priority = i.get('priority') if i.get('priority') != None else 0
+            inheritance = Inheritance(name, priority)
+            relationships.append(inheritance)
+        
+        for attr in cl.findall('attribute'):
+            name = attr.get('name')
+            type_ = attr.get('type')
+            at = Attribute(name, type_)
+            attributes.append(at)
+        
+        for method in cl.findall('method'):
+            methodName = method.get('name')
+            body = method.find('body').text.strip()
+            newMethod = Method(methodName, body)
+            methods.append(newMethod)
+            
+        for constructs in cl.findall('constructor'):
+            parameters = []
+            body = i.get('body') if i.get('body') != None else ''
+            constructor = Constructor(parameters, body)
+            constructors.append(constructor)
+            
+        for destructs in cl.findall('destructor'):
+            body = i.get('body') if i.get('body') != None else ''
+            destructor = Destructor(body)
+            destructors.append(destructor)
+            
+        newClass = Class(xmlClassName, methods, relationships, attributes, constructors, destructors, default)
+        return newClass
