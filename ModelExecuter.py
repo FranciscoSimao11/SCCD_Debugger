@@ -37,6 +37,7 @@ class ModelExecuter():
                 entryScript = onentry.script
                 if entryScript != None:
                     print ("Exec entry script")
+                    #execfile("./MainApp.py") 
                 entryLog = onentry.log
                 if entryLog != None:
                     print (entryLog)
