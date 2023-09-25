@@ -1,12 +1,15 @@
 class Class():
-    def __init__(self, name, methods, relationships, defaultClass):
+    def __init__(self, name, methods, relationships, attributes, constructors, destructors, defaultClass):
              self.name = name
              self.methods = methods
              self.relationships = relationships
+             self.attributes = attributes
+             self.constructors = constructors
+             self.destructors = destructors
              self.defaultClass = defaultClass
 
-    def addMethod(self, newMethod):
-        self.methods.append(newMethod)
+    # def addMethod(self, newMethod):
+    #     self.methods.append(newMethod)
 
     def getPrintableMethods(self):
         met = ''

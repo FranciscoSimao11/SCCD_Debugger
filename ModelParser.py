@@ -1,13 +1,16 @@
 # -*- coding: utf-8 -*-
-from State import *
-from Transition import *
-from Class import*
-from Method import*
-from Statechart import*
-from HistoryState import*
+from statechartObjects.State import *
+from statechartObjects.Transition import *
+from statechartObjects.Statechart import*
+from statechartObjects.HistoryState import*
 from Misc import*
-from Association import*
-from Inheritance import*
+from classObjects.Class import*
+from classObjects.Method import*
+from classObjects.Association import*
+from classObjects.Inheritance import*
+from classObjects.Constructor import*
+from classObjects.Destructor import*
+from classObjects.Attribute import*
 import xml.etree.ElementTree as ET
 import sys
 
@@ -34,9 +37,12 @@ class ModelParser():
 
         #process classes
         for cl in root.findall('class'):
-            className = cl.get('name')
+            xmlClassName = cl.get('name')
             methods = []
             relationships = []
+            attributes = []
+            constructors = []
+            destructors = []
             default = cl.get('default')
             relationshipsXML = cl.find('relationships')
             
@@ -58,17 +64,28 @@ class ModelParser():
                 name = attr.get('name')
                 type_ = attr.get('type')
                 at = Attribute(name, type_)
+                attributes.append(at)
             
-            newClass = Class(className, methods, relationships, default)
-            classes[className] = newClass
-            
-            #process class methods
             for method in cl.findall('method'):
                 methodName = method.get('name')
                 body = method.find('body').text.strip()
                 newMethod = Method(methodName, body)
-                newClass.addMethod(newMethod)
+                methods.append(newMethod)
                 
+            for constructs in cl.findall('constructor'):
+                parameters = []
+                body = i.get('body') if i.get('body') != None else ''
+                constructor = Constructor(parameters, body)
+                constructors.append(constructor)
+                
+            for destructs in cl.findall('destructor'):
+                body = i.get('body') if i.get('body') != None else ''
+                destructor = Destructor(body)
+                destructors.append(destructor)
+            
+            newClass = Class(xmlClassName, methods, relationships, attributes, constructors, destructors, default)
+            classes[xmlClassName] = newClass
+            
             #process associated statechart
             for statechart in cl.findall('scxml'):
                 initialState = statechart.get('initial')

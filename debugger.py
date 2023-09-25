@@ -1,6 +1,6 @@
 from __future__ import print_function
-from State import *
-from Transition import *
+from statechartObjects.State import *
+from statechartObjects.Transition import *
 from ModelParser import *
 from ModelExecuter import *
 import sys

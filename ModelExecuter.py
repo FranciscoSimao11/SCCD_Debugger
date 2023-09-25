@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
-from State import *
-from Transition import *
+from statechartObjects.State import *
+from statechartObjects.Transition import *
 from Timer import *
 import sys, threading, multiprocessing
 import Queue
