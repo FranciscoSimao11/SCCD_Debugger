@@ -33,9 +33,13 @@ class ModelExecuter():
                 print("Moving back to state {}".format(nextState.name))
                 currState = nextState
             else:
-                entryScript = currState.entryScript
+                onentry = currState.onentry
+                entryScript = onentry.script
                 if entryScript != None:
                     print ("Exec entry script")
+                entryLog = onentry.log
+                if entryLog != None:
+                    print (entryLog)
 
                 timedTransitionToExecute, possibleTransitionsWithEvents = self.checkSmallestTimer(currState.transitions)
                 
@@ -80,9 +84,14 @@ class ModelExecuter():
                             s.lastActiveState = currState
                             break
                 
-                exitScript = currState.exitScript
+                onexit = currState.onexit
+                exitScript = onexit.script
                 if exitScript != None:
                     print ("Exec exit script")
+                    
+                exitLog = onexit.log
+                if exitLog != None:
+                    print (exitLog) 
                     
                 transitionScript = transitionToExecute.script
                 if transitionScript != None:

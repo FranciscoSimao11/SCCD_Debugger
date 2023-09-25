@@ -3,6 +3,8 @@ from statechartObjects.State import*
 from statechartObjects.Transition import*
 from statechartObjects.Statechart import*
 from statechartObjects.HistoryState import*
+from statechartObjects.Onentry import*
+from statechartObjects.Onexit import*
 from Misc import*
 from classObjects.Class import*
 from classObjects.Method import*
@@ -55,31 +57,30 @@ class ModelParser():
         allStates = statechart.findall('state') + statechart.findall('parallel')
         #is it logical to lump history states together with states and parallel states even though they can't be the top element?
         for state in allStates:
-            if(state.tag == "state"):
-                parallel = False
-            else:
-                parallel = True
+            parallel = False if state.tag == "state" else True
             stateId = state.get('id')
             transitions = []
             initialState = state.get('initial') #if its not a composite state, its None
             childStates = {}
+            parentState = None if level == 0 else newStatechart
             
-            if level == 0:
-                parentState = None
-            else:
-                parentState = newStatechart
-            
-            #process onentry scripts
-            entryScript = state.find('./onentry/script')
-            if entryScript != None:
-                entryScript = entryScript.text.strip()
+            onentry = state.find('onentry')
+            newOnentry = Onentry('', '', '')
+            if(onentry != None):
+                entryScript = onentry.find('script').text.strip() if onentry.find('script') != None else None
+                entryLog = onentry.find('log').text.strip() if onentry.find('log') != None else None
+                entryRaise = onentry.find('raise').text.strip() if onentry.find('raise') != None else None
+                newOnentry = Onentry(entryScript, entryLog, entryRaise)
+
+            onexit = state.find('onexit')
+            newOnexit = Onexit('', '', '')
+            if(onexit != None):
+                exitScript = onexit.find('script').text.strip() if onexit.find('script') != None else None
+                exitLog = onexit.find('log').text.strip() if onexit.find('log') != None else None
+                exitRaise = onexit.find('raise').text.strip() if onexit.find('raise') != None else None
+                newOnexit = Onexit(exitScript, exitLog, exitRaise)
                 
-            #process onexit scripts
-            exitScript = state.find('./onexit/script')
-            if exitScript != None:
-                exitScript = exitScript.text.strip()
-            
-            newState = State(stateId, transitions, entryScript, exitScript, initialState, childStates, parentState, parallel)                
+            newState = State(stateId, transitions, newOnentry, newOnexit, initialState, childStates, parentState, parallel)                
             newStatechart.addState(newState)
             
             #process outgoing transitions
