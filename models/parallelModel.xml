@@ -1,16 +1,8 @@
 <?xml version="1.0" ?>
-<diagram author="Francisco Simoes" name="Counter">
+<diagram author="Francisco Simoes" name="Composite Counter">
     <inport name="input" />
     <outport name="output" />
-    <top>
-        from sccd.runtime.libs.ui import ui
-        from sccd.runtime.accurate_time import time
-    </top>
     <class name="MainApp" default="true">
-        <relationships>
-            <association name="trafficlight" class="TrafficLight" />
-            <inheritance name="trafficlight" />
-        </relationships>
         <method name="MainApp">
             <body>
                 <![CDATA[
@@ -25,15 +17,23 @@
             </body>
         </method>
         <scxml initial="state_A">
-            <state id="state_A">
-                <onentry>
-                    <script>
-                        self.increment_counter();
-                    </script>
-                </onentry>
-                <transition target="../state_B" after="10" />
-                <transition target="../state_B" event="move" port="input" />
-            </state>
+            <parallel id="state_A">
+                <state id="state_A2">
+                    <onentry>
+                        <script>
+                            self.increment_counter();
+                        </script>
+                    </onentry>
+                </state>
+                <state id="state_B2">
+                    <onentry>
+                        <script>
+                            self.increment_counter();
+                        </script>
+                    </onentry>
+                </state>
+                <transition target="../state_B" after="5" />
+            </parallel>
             <state id="state_B">
                 <onentry>
                     <script>

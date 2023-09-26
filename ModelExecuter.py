@@ -44,6 +44,8 @@ class ModelExecuter():
 
                 timedTransitionToExecute, possibleTransitionsWithEvents = self.checkSmallestTimer(currState.transitions)
                 
+                #priority queue with events
+                
                 if timedTransitionToExecute != None and len(possibleTransitionsWithEvents) < 1: #TIMED TRANSITIONS ONLY
                     print("Timed Transition to be executed: " + timedTransitionToExecute.getPrintableObject())
                     
@@ -70,7 +72,7 @@ class ModelExecuter():
                     sleepTime = timedTransitionToExecute.after
                     eventQueue = Queue.Queue()
                     mode = 1
-                    transitionToExecute = self.threadsSetup(sleepTime, eventQueue, mode, scaleFactor)    
+                    transitionToExecute = self.threadsSetup(sleepTime, eventQueue, mode, scaleFactor, possibleTransitionsWithEvents)    
 
                 else:
                     print("Whoops, we've reached a dead end.")

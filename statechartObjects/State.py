@@ -24,7 +24,7 @@ class State():
         return False
     
     def isParallel(self):
-        return parallel
+        return self.parallel
 
     def getPrintableCollection(self, collection):
         trans = '' 

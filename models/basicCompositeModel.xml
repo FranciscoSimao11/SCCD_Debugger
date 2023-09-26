@@ -17,13 +17,14 @@
             </body>
         </method>
         <scxml initial="state_A">
-            <parallel id="state_A">
+            <state id="state_A" initial="state_A2">
                 <state id="state_A2">
                     <onentry>
                         <script>
                             self.increment_counter();
                         </script>
                     </onentry>
+                    <transition target="../state_B2" event="move" port="input" />
                 </state>
                 <state id="state_B2">
                     <onentry>
@@ -31,9 +32,11 @@
                             self.increment_counter();
                         </script>
                     </onentry>
+                    <transition target="../state_A2" event="move" port="input" />
+                    <transition target="../../state_B" event="goB" port="input" />
                 </state>
                 <transition target="../state_B" after="5" />
-            </parallel>
+            </state>
             <state id="state_B">
                 <onentry>
                     <script>
@@ -41,7 +44,6 @@
                     </script>
                 </onentry>
                 <transition target="../state_A" event="move" port="input" />
-                <transition target="../state_A/history" event="back" port="input" />
             </state>
         </scxml>
     </class>

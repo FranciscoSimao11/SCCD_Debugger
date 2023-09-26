@@ -122,19 +122,20 @@ class ModelParser():
         default = cl.get('default')
         relationshipsXML = cl.find('relationships')
         
-        for assoc in relationshipsXML.findall('association'):
-            name = assoc.get('name')
-            className = assoc.get('class')
-            min_ = assoc.get('min') if assoc.get('min') != None else 0
-            max_ = assoc.get('max') if assoc.get('max') != None else float('inf')
-            association = Association(name, className, min_, max_)
-            relationships.append(association)
-            
-        for i in relationshipsXML.findall('inheritance'):
-            name = i.get('name')
-            priority = i.get('priority') if i.get('priority') != None else 0
-            inheritance = Inheritance(name, priority)
-            relationships.append(inheritance)
+        if relationshipsXML != None:
+            for assoc in relationshipsXML.findall('association'):
+                name = assoc.get('name')
+                className = assoc.get('class')
+                min_ = assoc.get('min') if assoc.get('min') != None else 0
+                max_ = assoc.get('max') if assoc.get('max') != None else float('inf')
+                association = Association(name, className, min_, max_)
+                relationships.append(association)
+                
+            for i in relationshipsXML.findall('inheritance'):
+                name = i.get('name')
+                priority = i.get('priority') if i.get('priority') != None else 0
+                inheritance = Inheritance(name, priority)
+                relationships.append(inheritance)
         
         for attr in cl.findall('attribute'):
             name = attr.get('name')
